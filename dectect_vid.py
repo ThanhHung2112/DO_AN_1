@@ -9,30 +9,61 @@
 import cv2
 from deepface import DeepFace
 from retinaface import RetinaFace
+import numpy as np
 import pandas as pd
 from numpy import mean
 import matplotlib.pyplot as plt
+
+def bbox_to_bytes(bbox_array):
+  """
+  Params:
+          bbox_array: Numpy array (pixels) containing rectangle to overlay on video stream.
+  Returns:
+        bytes: Base64 image byte string
+  """
+  # convert array into PIL image
+  bbox_PIL = PIL.Image.fromarray(bbox_array, 'RGBA')
+  iobuf = io.BytesIO()
+  # format bbox into png for return
+  bbox_PIL.save(iobuf, format='png')
+  # format return string
+  bbox_bytes = 'data:image/png;base64,{}'.format((str(b64encode(iobuf.getvalue()), 'utf-8')))
+
+  return bbox_bytes
 
 # Load the cascade  
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
 # To capture video from existing video.   
 cap = cv2.VideoCapture('Video Of People Walking.mp4')  
-  
+# cap = cv2.VideoCapture(0)
+
+i = 0
 while True:  
     # Read the frame  
-    _, img = cap.read()
-  
+    #_, img = cap.read()
+    ret, frame = cap.read()
+
+    bbox_array = np.zeros([480,640,4], dtype=np.uint8)
+
+    cv2.imshow('Video', frame) 
+    print('helo')
+    
+    #cv2.rectangle(frame, (200,100),(300,400), (255,255,255), 2) # BGR
+
+    cv2.imwrite('bbox{}'.format(i), frame)
+    i+=1
+    # def Detect_Retina
     # Face detect using Retinaface  
-    obj = RetinaFace.detect_faces(img)
+    # obj = RetinaFace.detect_faces(img)
   
-    print('='*100,'\n'
-      'found', len(obj.keys()), 'face in picture','\n',
-       '='*100)
-    i = 1
-    for key in obj.keys():
+    # print('='*100,'\n'
+    #   'found', len(obj.keys()), 'face in picture','\n',
+    #    '='*100)
+    # i = 1
+    # for key in obj.keys():
   
-        identity = obj[key]
+    #     identity = obj[key]
 
         # r_eye = identity['landmarks']['right_eye']
         # l_eye = identity['landmarks']['left_eye']
@@ -53,21 +84,23 @@ while True:
 
         # rectangle faces
     
-        facial_area = identity['facial_area']
-        cv2.rectangle(img, (facial_area[0],facial_area[1]),(facial_area[2],facial_area[3]), (255,255,255), 2) # BGR
+        # facial_area = identity['facial_area']
+        # cv2.rectangle(img2, (facial_area[0],facial_area[1]),(facial_area[2],facial_area[3]), (255,255,255), 2) # BGR
 
-        text_size = (facial_area[2] - facial_area[0])/140
+    
+
+        # text_size = (facial_area[2] - facial_area[0])/140
         # write up face
         #print((facial_area[2] - facial_area[0],facial_area[3] - facial_area[1]))
-        cv2.putText(img, 'Person.{}'.format(i) ,(facial_area[0],facial_area[1]- 15)
-        ,fontFace = cv2.FONT_HERSHEY_COMPLEX, fontScale = text_size, color = (0,0,255))
-        i += 1
+        # cv2.putText(img, 'Person.{}'.format(i) ,(facial_area[0],facial_area[1]- 15)
+        # ,fontFace = cv2.FONT_HERSHEY_COMPLEX, fontScale = text_size, color = (0,0,255))
+        # i += 1
 
     # -----------------------------------------------------
     # Detect using opencv
     # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
   
-    # # Detect the faces  
+    #   # Detect the faces  
     # faces = face_cascade.detectMultiScale(gray, 1.1, 4)  
   
     # # Draw the rectangle around each face  
@@ -85,9 +118,8 @@ while True:
     # cv2.putText(bbox_array, person_name,(facial_area[0],facial_area[1] - 12),
     #                 fontFace = cv2.FONT_HERSHEY_COMPLEX, fontScale = 0.8, color = (250,225,100))
 
-  
     # Display  
-    cv2.imshow('Video', img)
+    # cv2.imshow('Video', img2)
   
     # Press Esc to stop the video  
     k = cv2.waitKey(30) & 0xff  
@@ -96,3 +128,4 @@ while True:
           
 # Release the VideoCapture object  
 cap.release()  
+cv2.destroyAllWindows()
